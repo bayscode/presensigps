@@ -38,6 +38,14 @@
                 <h4>Silahkan Login</h4>
             </div>
             <div class="section mt-1 mb-5">
+                @php
+                    $messagewarning = Session::get('warning');
+                @endphp
+                @if (Session::get('warning'))
+                    <div class="alert alert-outline-warning">
+                        {{ $messagewarning }}
+                    </div>
+                @endif
                 <form action="/proseslogin" method="POST">
                     @csrf
                     <div class="form-group boxed">
@@ -51,7 +59,8 @@
 
                     <div class="form-group boxed">
                         <div class="input-wrapper">
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Password">
                             <i class="clear-input">
                                 <ion-icon name="close-circle"></ion-icon>
                             </i>
