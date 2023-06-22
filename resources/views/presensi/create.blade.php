@@ -21,7 +21,6 @@
             height: auto !important;
             border-radius: 10px;
         }
-
         #map {
             height: 200px;
         }
@@ -73,6 +72,10 @@
         <source src="{{ asset('assets/sound/notifikasi_out.mp3') }}" type="audio/mpeg">
     </audio>
 
+    <audio id="radius_sound">
+        <source src="{{ asset('assets/sound/radius.mp3') }}" type="audio/mpeg">
+    </audio>
+
     {{-- End notifikasi audio --}}
 @endsection
 
@@ -81,6 +84,7 @@
         // Insialisasi notifikasi & Camera
         var notifikasi_in = document.getElementById('notifikasi_in');
         var notifikasi_out = document.getElementById('notifikasi_out');
+        var radius_sound = document.getElementById('radius_sound');
         Webcam.set({
             height: 480,
             width: 640,
@@ -103,10 +107,10 @@
                 maxZoom: 19,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             }).addTo(map);
-
+            // Titik koortinat
             var marker = L.marker([position.coords.latitude, position.coords.longitude]).addTo(map);
-
-            var circle = L.circle([position.coords.latitude, position.coords.longitude], {
+            // Lingkaran radius
+            var circle = L.circle([-2.943855117084306, 104.78319361765587], {
                 color: 'red',
                 fillColor: '#f03',
                 fillOpacity: 0.5,
@@ -148,9 +152,12 @@
                         });
                         setTimeout("location.href='/dashboard'", 3000);
                     } else {
+                        if (status[2] == "radius") {
+                            radius_sound.play();
+                        }
                         Swal.fire({
-                            title: 'Tidak Berhasil!',
-                            text: 'Maaf anda gagal absen!',
+                            title: 'Gagal!',
+                            text: status[1],
                             icon: 'error',
                         });
                     }

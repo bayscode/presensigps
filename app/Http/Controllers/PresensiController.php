@@ -26,8 +26,19 @@ class PresensiController extends Controller
         $nik = Auth::guard('karyawan')->user()->nik;
         $tgl_presensi = date("Y-m-d");
         $jam = date("H:i:s");
+        // -2.943855117084306, 104.78319361765587
+        $latitudekantor = -2.943855117084306;
+        $longitudekantor = 104.78319361765587;
         $lokasi = $request->lokasi;
+        $lokasiuser = explode(",", $lokasi);
+        $latitudeuser = $lokasiuser[0];
+        $longitudeuser = $lokasiuser[1];
+
+        $jarak = $this->distance($latitudekantor, $longitudekantor, $latitudeuser, $longitudeuser);
+        $radius = round($jarak["meters"]); // Menampilkan total jarak
         $image = $request->image;
+        // Validasi
+
         $folderPath = "public/uploads/absensi/";
         $formatName = $nik . "-" . $tgl_presensi;
         $image_parts = explode(";base64", $image);
@@ -41,40 +52,64 @@ class PresensiController extends Controller
          * datanya.
          */
         $cek = DB::table('presensi')->where('tgl_presensi', $tgl_presensi)->where('nik', $nik)->count();
-        if ($cek > 0) {
-            $data_pulang = [
-                'jam_out' => $jam,
-                'foto_out' => $fileName,
-                'lokasi_out' => $lokasi
-            ];
-            $update = DB::table('presensi')->where('tgl_presensi', $tgl_presensi)->where('nik', $nik)->update($data_pulang);
-
-            if ($update) {
-                echo "success|Terima kasih, Atas kerja kerasnya!|out";
-                Storage::put($file, $image_base64);
-            } else {
-                echo "error|Maaf anda gagal untuk absen!|out";
-            }
-            /**
-             * Kalau udah absen maka update data pulangnya, kalau belum absen
-             * maka insert data masuknya.
-             */
+        /**
+         * Jadi kalau berada didalam radius baru melakukan pengecekan, apakah dia sudah melakukan
+         * absen atau belum, kalau belum berarti simpan data, kalau sudah berarti
+         * update data.
+         */
+        if ($radius > 10) {
+            echo "error|Maaf anda berada diluar jangkauan, jarak anda " . $radius . " meter dari kantor|radius";
         } else {
-            $data = [
-                'nik' => $nik,
-                'tgl_presensi' => $tgl_presensi,
-                'jam_in' => $jam,
-                'foto_in' => $fileName,
-                'lokasi_in' => $lokasi
-            ];
+            if ($cek > 0) {
+                $data_pulang = [
+                    'jam_out' => $jam,
+                    'foto_out' => $fileName,
+                    'lokasi_out' => $lokasi
+                ];
+                $update = DB::table('presensi')->where('tgl_presensi', $tgl_presensi)->where('nik', $nik)->update($data_pulang);
 
-            $simpan = DB::table('presensi')->insert($data);
-            if ($simpan) {
-                echo "success|Terima kasih, Semangat kerjanya!|in";
-                Storage::put($file, $image_base64);
+                if ($update) {
+                    echo "success|Terima kasih, Atas kerja kerasnya!|out";
+                    Storage::put($file, $image_base64);
+                } else {
+                    echo "error|Maaf anda gagal untuk absen!|out";
+                }
+                /**
+                 * Kalau udah absen maka update data pulangnya, kalau belum absen
+                 * maka insert data masuknya.
+                 */
             } else {
-                echo "error|Maaf anda gagal untuk absen!|in";
+                $data = [
+                    'nik' => $nik,
+                    'tgl_presensi' => $tgl_presensi,
+                    'jam_in' => $jam,
+                    'foto_in' => $fileName,
+                    'lokasi_in' => $lokasi
+                ];
+
+                $simpan = DB::table('presensi')->insert($data);
+                if ($simpan) {
+                    echo "success|Terima kasih, Semangat kerjanya!|in";
+                    Storage::put($file, $image_base64);
+                } else {
+                    echo "error|Maaf anda gagal untuk absen!|in";
+                }
             }
         }
+    }
+
+    //Menghitung Jarak
+    function distance($lat1, $lon1, $lat2, $lon2)
+    {
+        $theta = $lon1 - $lon2;
+        $miles = (sin(deg2rad($lat1)) * sin(deg2rad($lat2))) + (cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta)));
+        $miles = acos($miles);
+        $miles = rad2deg($miles);
+        $miles = $miles * 60 * 1.1515;
+        $feet = $miles * 5280;
+        $yards = $feet / 3;
+        $kilometers = $miles * 1.609344;
+        $meters = $kilometers * 1000;
+        return compact('meters');
     }
 }
