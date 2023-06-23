@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -26,21 +25,26 @@ class PresensiController extends Controller
         $nik = Auth::guard('karyawan')->user()->nik;
         $tgl_presensi = date("Y-m-d");
         $jam = date("H:i:s");
-        // -2.943855117084306, 104.78319361765587
-        $latitudekantor = -2.943855117084306;
-        $longitudekantor = 104.78319361765587;
+        $latitudekantor = -2.9439201011746268;
+        $longitudekantor = 104.78326410123614;
         $lokasi = $request->lokasi;
         $lokasiuser = explode(",", $lokasi);
         $latitudeuser = $lokasiuser[0];
         $longitudeuser = $lokasiuser[1];
 
         $jarak = $this->distance($latitudekantor, $longitudekantor, $latitudeuser, $longitudeuser);
-        $radius = round($jarak["meters"]); // Menampilkan total jarak
-        $image = $request->image;
-        // Validasi
+        $radius = round($jarak["meters"]);
 
+        $cek = DB::table('presensi')->where('tgl_presensi', $tgl_presensi)->where('nik', $nik)->count();
+
+        if ($cek > 0) {
+            $ket = "out";
+        } else {
+            $ket = "in";
+        }
+        $image = $request->image;
         $folderPath = "public/uploads/absensi/";
-        $formatName = $nik . "-" . $tgl_presensi;
+        $formatName = $nik . "-" . $tgl_presensi . "-" . $ket;
         $image_parts = explode(";base64", $image);
         $image_base64 = base64_decode($image_parts[1]);
         $fileName = $formatName . ".png";
@@ -51,13 +55,8 @@ class PresensiController extends Controller
          * yang dilakukan/dijalankan bukan menyimpan lagi, tapi untuk mengupdate
          * datanya.
          */
-        $cek = DB::table('presensi')->where('tgl_presensi', $tgl_presensi)->where('nik', $nik)->count();
-        /**
-         * Jadi kalau berada didalam radius baru melakukan pengecekan, apakah dia sudah melakukan
-         * absen atau belum, kalau belum berarti simpan data, kalau sudah berarti
-         * update data.
-         */
-        if ($radius > 10) {
+
+        if ($radius > 20) {
             echo "error|Maaf anda berada diluar jangkauan, jarak anda " . $radius . " meter dari kantor|radius";
         } else {
             if ($cek > 0) {
@@ -97,8 +96,7 @@ class PresensiController extends Controller
             }
         }
     }
-
-    //Menghitung Jarak
+    //Menghitung jarak meter
     function distance($lat1, $lon1, $lat2, $lon2)
     {
         $theta = $lon1 - $lon2;

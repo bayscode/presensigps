@@ -21,6 +21,7 @@
             height: auto !important;
             border-radius: 10px;
         }
+
         #map {
             height: 200px;
         }
@@ -110,7 +111,8 @@
             // Titik koortinat
             var marker = L.marker([position.coords.latitude, position.coords.longitude]).addTo(map);
             // Lingkaran radius
-            var circle = L.circle([-2.943855117084306, 104.78319361765587], {
+            // -2.9439114,104.7831796 -> posisi gw
+            var circle = L.circle([-2.9439201011746268, 104.78326410123614], {
                 color: 'red',
                 fillColor: '#f03',
                 fillOpacity: 0.5,
@@ -124,7 +126,6 @@
             Webcam.snap(function(uri) {
                 image = uri;
             });
-
             var lokasi = $("#lokasi").val();
             $.ajax({
                 type: 'POST',
