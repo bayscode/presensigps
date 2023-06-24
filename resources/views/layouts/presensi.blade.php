@@ -37,14 +37,14 @@
     <!-- * App Capsule -->
 
 
-   @include('layouts.bottomNav') 
+    @include('layouts.bottomNav')
 
-   @include('layouts.script')
-
-
+    @include('layouts.script')
 
 
-   
+
+
+
 
 </body>
 
